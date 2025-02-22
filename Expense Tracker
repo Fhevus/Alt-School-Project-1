@@ -1,0 +1,98 @@
+import uuid
+from datetime import datetime
+
+class Expense:
+    """Represents an individual financial expense."""
+    
+    def __init__(self, title: str, amount: float):
+        """Initialize an Expense object with a title and amount."""
+        self.id = str(uuid.uuid4())  # Generate a unique UUID string
+        self.title = title
+        self.amount = amount
+        self.created_at = datetime.utcnow()  # Current UTC timestamp
+        self.updated_at = self.created_at  # Initially same as created_at
+    def update(self, title: str = None, amount: float = None):
+        """Update title and/or amount, and refresh the updated_at timestamp."""
+        if title is not None:
+            self.title = title
+        if amount is not None:
+            self.amount = amount
+        self.updated_at = datetime.utcnow()  # Update timestamp
+    
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the expense."""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "amount": self.amount,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat()
+        }
+
+class ExpenseDB:
+    """Manages a collection of Expense objects."""
+    
+    def __init__(self):
+        """Initialize an empty list of expenses."""
+        self.expenses = []
+    
+    def add_expense(self, expense: Expense):
+        """Add an Expense object to the collection."""
+        self.expenses.append(expense)
+    
+    def remove_expense(self, expense_id: str) -> bool:
+        """Remove an expense by its ID. Returns True if removed, False if not found."""
+        for i, expense in enumerate(self.expenses):
+            if expense.id == expense_id:
+                self.expenses.pop(i)
+                return True
+        return False
+    
+    def get_expense_by_id(self, expense_id: str) -> Expense | None:
+        """Retrieve an expense by its ID, or None if not found."""
+        for expense in self.expenses:
+            if expense.id == expense_id:
+                return expense
+        return None
+    
+    def get_expense_by_title(self, title: str) -> list[Expense]:
+        """Retrieve a list of expenses matching the given title."""
+        return [expense for expense in self.expenses if expense.title == title]
+    
+    def to_dict(self) -> list[dict]:
+        """Return a list of dictionaries representing all expenses."""
+        return [expense.to_dict() for expense in self.expenses]
+
+# Example usage
+if __name__ == "__main__":
+    # Create an ExpenseDB instance
+    db = ExpenseDB()
+    
+    # Create some expenses
+    expense1 = Expense("Utility", 50.25)
+    expense2 = Expense("Rent", 1200.00)
+    expense3 = Expense("Education", 30.75)
+    
+    # Add expenses to the database
+    db.add_expense(expense1)
+    db.add_expense(expense2)
+    db.add_expense(expense3)
+    
+    # Print all expenses
+    print("All expenses:", db.to_dict())
+    
+    # Update an expense
+    expense1.update(title="Supermarket", amount=55.00)
+    print("\nUpdated expense1:", expense1.to_dict())
+    
+    # Get expense by ID
+    found_expense = db.get_expense_by_id(expense2.id)
+    print("\nExpense by ID:", found_expense.to_dict() if found_expense else "Not found")
+    
+    # Get expenses by title
+    groceries = db.get_expense_by_title("Groceries")
+    print("\nExpenses titled 'Groceries':", [exp.to_dict() for exp in groceries])
+    
+    # Remove an expense
+    db.remove_expense(expense3.id)
+    print("\nAfter removing expense3:", db.to_dict())
